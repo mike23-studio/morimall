@@ -2,19 +2,14 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Morimall – Shop Smart, Pay Easy</title>
-<meta name="description" content="Morimall – buy and sell new and used goods, and wholesale, in Kenya."><meta property="og:title" content="Morimall"><meta property="og:description" content="Shop retail, trade with individuals, or buy wholesale – escrow-protected.">
+<meta name="theme-color" content="#f36b21"><link rel="preconnect" href="https://images.unsplash.com"><meta name="description" content="Morimall – buy and sell new and used goods, and wholesale, in Kenya."><meta property="og:title" content="Morimall"><meta property="og:description" content="Shop retail, trade with individuals, or buy wholesale – escrow-protected.">
 <link rel="stylesheet" href="css/style.css"></head><body>
-<header>
-<span class="logo" onclick="go('shop')">🛍️ Morimall</span>
-<div class="search"><input id="q" placeholder="Search products, brands, categories…" oninput="S.q=this.value;if(S.v!='shop')S.v='shop';draw()"><button>Search</button></div>
-<button class="hb" onclick="go('wallet')" id="wb"></button>
-<button class="hb" onclick="go('cart')" id="cb"></button>
-<button class="hb" onclick="go('orders')">📦 Orders</button>
-<button class="hb" onclick="go('sell')">🏪 Sell</button>
-<button class="hb" id="ab" onclick="go('account')"></button>
-<button class="hb" id="mb" onclick="mode()" title="Switch between individual and business account"></button>
-<button class="hb" id="tb" onclick="theme()" title="Toggle light/dark mode"></button>
-</header>
+<div class="top-strip"><div class="top-strip-inner"><span>🇰🇪 &nbsp; Shopping made simple across Kenya</span><span><a href="#" onclick="go('sell');return false">Sell on Morimall</a><i></i><a href="#" onclick="go('orders');return false">Track orders</a><i></i><a href="#" onclick="go('account');return false">Help & support</a></span></div></div>
+<header><div class="header-inner">
+<span class="logo" onclick="go('shop')"><span class="logo-mark">m</span><span>mori<span class="logo-accent">mall</span><small>SHOP SMART. PAY EASY.</small></span></span>
+<div class="search"><span class="search-icon">⌕</span><input id="q" placeholder="Search products, brands and categories…" oninput="S.q=this.value;if(S.v!='shop')S.v='shop';draw()"><button onclick="S.q=document.getElementById('q').value;draw()">Search</button></div>
+<div class="header-actions"><button class="hb" onclick="go('account')" id="ab"></button><button class="hb" onclick="go('wallet')" id="wb"></button><button class="hb" onclick="go('cart')" id="cb"></button><button class="hb icon-action" onclick="go('orders')" title="Orders">▣<small>Orders</small></button><button class="hb icon-action" onclick="mode()" id="mb" title="Switch account type"></button><button class="hb icon-action" onclick="theme()" id="tb" title="Toggle theme"></button></div>
+</div></header>
 <main id="app"></main>
 <footer><a href="#" onclick="legal('terms');return false">Terms</a> · <a href="#" onclick="legal('privacy');return false">Privacy</a> · <a href="#" onclick="legal('refunds');return false">Refund policy</a><br>Follow us: <a href="https://facebook.com/" target="_blank" rel="noopener">Facebook</a> · <a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a> · <a href="https://x.com/" target="_blank" rel="noopener">X</a> · <a href="https://wa.me/" target="_blank" rel="noopener">WhatsApp</a><br>© 2026 Morimall · Prices in KSh incl. 16% VAT</footer>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
