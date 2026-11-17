@@ -1,13 +1,25 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{db}/documents {
-    // Each user can only read/write their own profile, wallet, orders and tickets.
-    match /users/{uid} { allow read, write: if request.auth != null && request.auth.uid == uid; }
-    // Anyone can browse listings; only the seller can create/change/delete their own.
+    // Admins = documents in /admins/{uid}, created ONLY by you in the Firebase console (Firestore -> Start collection "admins" -> document id = the admin's UID).
+    function isAdmin() { return request.auth != null && exists(/databases/$(db)/documents/admins/$(request.auth.uid)); }
+
+    match /admins/{uid} { allow read: if request.auth != null && request.auth.uid == uid; allow write: if false; }
+
+    // Users read/write their own data (but cannot change their own `suspended` flag). Admins can read all users and update any.
+    match /users/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow create: if request.auth != null && request.auth.uid == uid && request.resource.data.get('suspended', false) == false;
+      allow update: if isAdmin() || (request.auth != null && request.auth.uid == uid
+                      && request.resource.data.get('suspended', false) == resource.data.get('suspended', false));
+      allow delete: if request.auth != null && (request.auth.uid == uid || isAdmin());
+    }
+
+    // Anyone can browse listings; sellers manage their own; admins can moderate any.
     match /products/{pid} {
       allow read: if true;
-      allow create: if request.auth != null && request.resource.data.sellerUid == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.sellerUid == request.auth.uid;
+      allow create: if request.auth != null && (request.resource.data.sellerUid == request.auth.uid || isAdmin());
+      allow update, delete: if request.auth != null && (resource.data.sellerUid == request.auth.uid || isAdmin());
     }
   }
 }

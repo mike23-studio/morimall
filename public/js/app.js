@@ -73,7 +73,7 @@ function offer(id){const p=S.prods.find(x=>x.id==id),m=document.createElement("d
   if(v>=p.p*.85){S.offer[id]=v;S.cart[id]=1;save();toast("Seller accepted "+K(v)+" – added to cart");draw()}else toast("Seller declined – try closer to "+K(p.p))}}
 function productSection(title,items,sub=""){if(!items.length)return "";const rid="rail-"+String(title).toLowerCase().replace(/[^a-z0-9]+/g,"-");return `<section class="product-section"><div class="section-heading"><div><h2>${title}</h2>${sub?`<p>${sub}</p>`:""}</div><div class="section-controls"><button class="rail-arrow" aria-label="Scroll products left" onclick="scrollRail('${rid}',-1)">‹</button><button class="rail-arrow" aria-label="Scroll products right" onclick="scrollRail('${rid}',1)">›</button><button class="see-all" onclick="S.cat='All';S.q='';draw()">See all <span>›</span></button></div></div><div class="product-rail" id="${rid}">${items.map(card).join("")}</div></section>`}
 function shop(){const q=S.q.toLowerCase(),biz=S.mode=="biz";
- const eligible=S.prods.filter(p=>(p.t!="B2B"||biz)&&(S.t=="All"||p.t==S.t));
+ const eligible=S.prods.filter(p=>!p.hidden&&(p.t!="B2B"||biz)&&(S.t=="All"||p.t==S.t));
  if(S.t=="B2B"&&!biz)return `<div class="box">Wholesale listings are for business buyers. <button class="btn" onclick="mode()">Switch to Business account</button></div>`;
  const filtered=eligible.filter(p=>(S.cat=="All"||p.c==S.cat)&&(!q||(p.n+p.c+p.s).toLowerCase().includes(q)));
  const categoryLinks=CATS.slice(1).map(c=>`<button onclick="S.cat='${c}';draw()" class="category-link ${S.cat==c?"active":""}"><span>${({Phones:"📱",Electronics:"🎧",Fashion:"👕",Home:"🏠",Beauty:"✨",Groceries:"🛒",Sports:"⚽"})[c]}</span>${c}<b>›</b></button>`).join("");
@@ -137,7 +137,7 @@ async function authGo(kind){const e=(ae.value||"").trim().toLowerCase(),pw=ap.va
   S.users[e]=S.users[e]||newU(e.split("@")[0])}
  login(e)}
 async function googleIn(){try{const e=(await MM_CLOUD.google()).toLowerCase();S.users[e]=window._gp||S.users[e]||newU(e.split("@")[0]);login(e)}catch(x){toast(x.message)}}
-function login(e){S.user=e;Object.assign(S,blank(),S.users[e].d);toast("Welcome, "+S.users[e].name);go("shop")}
+function login(e){if(S.users[e]&&S.users[e].suspended){if(window.MM_CLOUD)MM_CLOUD.signOut();return toast("This account is suspended. Please contact support.")}S.user=e;Object.assign(S,blank(),S.users[e].d);toast("Welcome, "+S.users[e].name);go("shop")}
 function logout(){save();if(window.MM_CLOUD)MM_CLOUD.signOut();S.user=null;Object.assign(S,blank());S.cart={};S.offer={};save();go("shop")}
 function saveProfile(){const u=S.users[S.user];u.phone=up.value.trim();u.addr=ua.value.trim();save();toast("Profile saved")}
 function delAcct(){const m=modal(`<h3>Delete account?</h3><p>This permanently deletes your profile, wallet, orders and tickets.</p><button class="btn" style="width:100%" id="go">Yes, delete everything</button><button class="btn o" style="width:100%;margin-top:6px" id="cx">Cancel</button>`);
@@ -153,7 +153,7 @@ function account(){if(!S.user)return `<div class="box" style="max-width:420px;ma
  <div class="row"><span>Orders</span><b>${S.orders.length}</b></div><div class="row"><span>Total spent</span><b>${K(spent)}</b></div><div class="row"><span>Loyalty tier</span><b>${tier}</b></div>
  <button class="btn o" style="width:100%;margin-top:10px" onclick="delAcct()">Delete my account &amp; data</button></div>
  <div class="box"><h3>Support tickets</h3><input id="ts" placeholder="Subject"><input id="tm" placeholder="Describe your issue"><button class="btn" onclick="ticket()">Submit ticket</button>
- ${S.tickets.map(t=>`<div class="row"><span>#${t.id} ${esc(t.s)}<br><span class="mut">${esc(t.m)} · ${t.d}</span></span><span class="${t.st=="Open"?"neg":"pos"}">${t.st}${t.st=="Open"?` <button class="btn o" onclick="closeT(${t.id})">Close</button>`:""}</span></div>`).join("")}</div></div>`}
+ ${S.tickets.map(t=>`<div class="row"><span>#${t.id} ${esc(t.s)}<br><span class="mut">${esc(t.m)} · ${t.d}${t.reply?"<br><b>Support:</b> "+esc(t.reply):""}</span></span><span class="${t.st=="Open"?"neg":"pos"}">${t.st}${t.st=="Open"?` <button class="btn o" onclick="closeT(${t.id})">Close</button>`:""}</span></div>`).join("")}</div></div>`}
 function credit(e,a,why){if(e==S.user){S.wallet+=a;S.tx.unshift({d:now(),t:why,a})}else if(S.users[e])S.users[e].d.wallet+=a}
 const back=o=>o.items.forEach(i=>{const p=S.prods.find(x=>x.n==i.n&&x.s==i.s);if(p)p.st+=i.q});
 function cancelO(id){const o=S.orders.find(x=>x.id==id);back(o);credit(S.user,o.total,"Refund – order #"+id);o.st="Cancelled – refunded";save();toast("Refunded to your wallet");draw()}
@@ -186,12 +186,12 @@ function restock(id){const p=S.prods.find(x=>x.id==id);p.st+=10;if(window.MM_CLO
 function delP(id){S.prods=S.prods.filter(x=>x.id!=id);if(window.MM_CLOUD)MM_CLOUD.deleteProduct(id);save();draw()}
 function banner(){if(S.consent||document.getElementById("cbn"))return;const b=document.createElement("div");b.id="cbn";b.className="cbn";
  b.innerHTML=`<span>Morimall uses your browser’s storage for your cart, login and preferences. <a href="#" onclick="legal('privacy');return false">Privacy Policy</a></span><button class="btn" id="ok">OK</button>`;document.body.appendChild(b);b.querySelector("#ok").onclick=()=>{S.consent=true;save();b.remove()}}
-function draw(){if(!S.user&&["wallet","orders","sell"].includes(S.v)){S.v="account";toast("Please log in first")}
+function draw(){window.adminHook&&adminHook();if(!S.user&&["wallet","orders","sell"].includes(S.v)){S.v="account";toast("Please log in first")}
  S.prods.forEach(p=>p.mine=!!S.user&&p.se==S.user);const n=Object.values(S.cart).reduce((a,b)=>a+b,0);
  wb.textContent=S.user?"Wallet · "+K(S.wallet):"Wallet";cb.textContent="Cart ("+n+")";ab.textContent=S.user?"Hi, "+S.users[S.user].name.split(" ")[0]:"Sign in";mb.textContent=S.mode=="biz"?"Business":"Individual";tb.textContent=isDark()?"☀ Light":"☾ Dark";
  const T=[["All","All listings"],["B2C","Retail"],["C2C","Individuals"],["B2B","Wholesale"]];
  const nav=S.v=="shop"?`<div class="market-nav"><div class="market-nav-inner"><button onclick="S.cat='All';S.t='All';draw()" class="market-nav-home">☰ &nbsp; All categories</button>${T.map(([k,l])=>`<button class="${S.t==k?"selected":""}" onclick="S.t='${k}';draw()">${l}</button>`).join("")}<button onclick="go('sell')">Sell on Morimall</button></div></div>`:"";
- app.innerHTML=nav+`<div class="page-content ${S.v=="shop"?"shop-page":"inner-page"}">${({shop,cart,wallet,orders,sell,account,product:productDetail})[S.v]()}</div>`;save();banner()}
+ app.innerHTML=nav+`<div class="page-content ${S.v=="shop"?"shop-page":"inner-page"}">${({shop,cart,wallet,orders,sell,account,product:productDetail,admin:adminView})[S.v]()}</div>`;save();banner()}
 
 if(window.MM_CLOUD)MM_CLOUD.loadProducts().then(L=>{L.forEach(c=>{const i=S.prods.findIndex(p=>String(p.id)===String(c.id));if(i>=0)S.prods[i]=Object.assign({},S.prods[i],c);else S.prods.unshift(c)});draw()}).catch(()=>{});
 draw();
